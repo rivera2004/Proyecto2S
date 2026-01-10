@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-
 # =========================
 # 1. ENTRADA Y VALIDACIÓN
 # =========================
@@ -132,59 +131,42 @@ def clasificar_curso(prom_curso):
         return "Curso en observación"
     else:
         return "Curso crítico"
-#
-def generar_reporte(porcs, atrasos_prom, estados, estado_curso, pmin, amax):
-    # Cálculos de métricas generales
-    total_estudiantes = len(porcs)
-    promedio_asistencia_grupal = sum(porcs) / total_estudiantes
-    promedio_atraso_grupal = sum(atrasos_prom) / total_estudiantes  
-    # Estados
-    criticos = estados.count("Crítico")
-    en_riesgo = estados.count("En riesgo")
-    regulares = estados.count("Regular")
-
-    reporte = "==================================================\n"
-    reporte += "       REPORTE DE ASISTENCIA Y PUNTUALIDAD\n"
-    reporte += "==================================================\n"
-    reporte += f"Configuración: Mín. Asistencia: {pmin}% | Máx. Atraso: {amax} min\n"
-    reporte += "--------------------------------------------------\n" 
-    # Información General
-    reporte += "RESUMEN DEL CURSO:\n"
-    reporte += f"- Estado General: {estado_curso.upper()}\n"
-    reporte += f"- Promedio Asistencia Grupal: {promedio_asistencia_grupal:.2f}%\n"
-    reporte += f"- Promedio Atraso Grupal: {promedio_atraso_grupal:.2f} min\n"
-    reporte += f"- Distribución: {regulares} Regulares, {en_riesgo} En Riesgo, {criticos} Críticos\n"
-    reporte += "--------------------------------------------------\n\n"  
-    # Detalle Individual
-    reporte += "DETALLE POR ESTUDIANTE:\n"
-    for i in range(total_estudiantes):
-        reporte += f"[Estudiante: {i+1:02d}] Asistencias: {porcs[i]:>6.2f}% | "
-        reporte += f"Atrasos Proemedios: {atrasos_prom[i]:>5.2f} min | "
-        reporte += f"Estado: {estados[i]}\n"
-    reporte += "=================================================="
-    return reporte
 
 # =========================
 # 4. PROCESAMIENTO E IMPRESIÓN 
 # =========================
-porcentajes = []
-atrasos_prom_list = []
-estados = []
+def imprimir_reporte_general(porcs, atrasos_prom, estados, estado_curso, pmin, amax):
+    total_estudiantes = len(porcs)
+    promedio_asistencia_grupal = sum(porcs) / total_estudiantes
+    promedio_atraso_grupal = sum(atrasos_prom) / total_estudiantes
+    
+    criticos = estados.count("Crítico")
+    en_riesgo = estados.count("En riesgo")
+    regulares = estados.count("Regular")
 
+    print("\n==================================================")
+    print("      REPORTE DE ASISTENCIA Y PUNTUALIDAD")
+    print("==================================================")
+    print(f"Configuración: Asistencia Mín: {pmin}% | Atraso Máx: {amax} min")
+    print("--------------------------------------------------")
+    print("RESUMEN DEL CURSO:")
+    print(f"- Estado General: {estado_curso.upper()}")
+    print(f"- Promedio Asistencia Grupal: {promedio_asistencia_grupal:.2f}%")
+    print(f"- Promedio Atraso Grupal: {promedio_atraso_grupal:.2f} min")
+    print(f"- Distribución: {regulares} Regulares, {en_riesgo} En Riesgo, {criticos} Críticos")
+    print("--------------------------------------------------")
+    print("DETALLE POR ESTUDIANTE:")
+    for i in range(total_estudiantes):
+        print(f"[Estudiante {i+1:02d}] Asistencia: {porcs[i]:>6.2f}% | Atraso Prom: {atrasos_prom[i]:>5.2f} min | Estado: {estados[i]}")
+    print("==================================================")
 
-print("\n" + "="*30)
-print("DETALLE POR DÍA")
-print("="*30)
-
-porc_dias_grafico = [] #Para el gráfico de líneas
-for d in range(n_dias): 
-    asistentes, porc_dia, prom_atr_dia = resumen_dia(asistencia, atrasos, d, Amax)
-    porc_dias_grafico.append(porc_dia) # Guardar para gráfico
-    print(f"\nDía {d+1}")
-    print("Asistentes:", asistentes)
-    print("Porcentaje asistencia:", round(porc_dia, 2), "%")
-    print("Atraso promedio del día:", round(prom_atr_dia, 2))
-
+def imprimir_detalle_por_dia(asistencia, atrasos, n_dias, amax):
+    print("\n" + "="*30)
+    print("DETALLE POR DÍA (CLASIFICACIÓN)")
+    print("="*30)
+    for d in range(n_dias):
+        asistentes, porc_dia, prom_atr_dia = resumen_dia(asistencia, atrasos, d, amax)
+        print(f"Día {d+1}: {asistentes} presentes | {porc_dia:.2f}% asistencia | Atraso prom: {prom_atr_dia:.2f} min")
 
 # =========================
 # 4. PROCESAMIENTO
@@ -207,8 +189,9 @@ estado_curso = clasificar_curso(prom_curso)
 # =========================
 # 5. REPORTE
 # =========================
-reporte = generar_reporte(porcentajes, atrasos_prom, estados, estado_curso, Pmin, Amax)
-print("\n" + reporte)
+imprimir_reporte_general(porcentajes, atrasos_prom, estados, estado_curso, Pmin, Amax)
+
+imprimir_detalle_por_dia(asistencia, atrasos, n_dias, Amax)
 
 # =========================
 # 6. VISUALIZACIONES
@@ -230,7 +213,6 @@ for d in range(n_dias):
     resultado = resumen_dia(asistencia, atrasos, d, Amax)
     if resultado:
         porc_dias.append(resultado[1])
-
 plt.figure()
 plt.plot(range(1, 8), porc_dias, marker='o')
 plt.axhline(80)
