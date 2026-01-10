@@ -63,6 +63,26 @@ n_dias = 7
 # =========================
 # 3. FUNCIONES OBLIGATORIAS
 # =========================
+def resumen_estudiante(lista_asistencia, lista_atrasos):
+    total_asistencias = 0
+    total_atrasos = 0
+    dias_presentes = 0
+    for a, t in zip(lista_asistencia, lista_atrasos):
+        if t < 0:
+            continue   # atraso inválido
+        if a == 1:
+            total_asistencias += 1
+            total_atrasos += t
+            dias_presentes += 1
+    porcentaje = (total_asistencias / len(lista_asistencia)) * 100
+    promedio_atraso = total_atrasos / dias_presentes if dias_presentes > 0 else 0
+    return (
+        total_asistencias,    
+        porcentaje,            
+        total_atrasos,        
+        promedio_atraso       
+    )
+
 def porcentaje_asistencia(lista_asistencia):
     return sum(lista_asistencia) / len(lista_asistencia) * 100
 
@@ -85,19 +105,25 @@ def clasificar_estudiante(porc, atraso_prom, pmin, amax):
     else:
         return "Regular"
 
-def resumen_dia(asistencia, atrasos, dia):
+def resumen_dia(asistencia, atrasos, dia, amax):
     asistentes = 0
-    suma_atraso = 0
+    suma_atrasos = 0
     for i in range(len(asistencia)):
+        if atrasos[i][dia] < 0:
+            continue
         if asistencia[i][dia] == 1:
             asistentes += 1
-            suma_atraso += atrasos[i][dia]
-            if atrasos[i][dia] > 3 * Amax:
+            suma_atrasos += atrasos[i][dia]
+            if atrasos[i][dia] > 3 * amax:
                 print("Alerta: atraso extremo detectado")
-                return None
-    porc_dia = asistentes / len(asistencia) * 100
-    atraso_prom_dia = suma_atraso / asistentes if asistentes > 0 else 0
-    return asistentes, porc_dia, atraso_prom_dia
+                break
+    porcentaje_dia = (asistentes / len(asistencia)) * 100
+    atraso_promedio_dia = suma_atrasos / asistentes if asistentes > 0 else 0
+    return (
+        asistentes,            
+        porcentaje_dia,       
+        atraso_promedio_dia    
+    )
 
 def clasificar_curso(prom_curso):
     if prom_curso >= 90:
@@ -106,15 +132,59 @@ def clasificar_curso(prom_curso):
         return "Curso en observación"
     else:
         return "Curso crítico"
-
+#
 def generar_reporte(porcs, atrasos_prom, estados, estado_curso, pmin, amax):
-    reporte = "REPORTE DE ASISTENCIA Y PUNTUALIDAD\n"
-    reporte += f"Pmin = {pmin}% | Amax = {amax} min\n\n"
-    for i in range(len(porcs)):
-        reporte += f"Estudiante {i+1}: Asistencia = {porcs[i]:.2f}% | "
-        reporte += f"Atraso Prom = {atrasos_prom[i]:.2f} min | Estado = {estados[i]}\n"
-    reporte += "\nEstado del curso: " + estado_curso
+    # Cálculos de métricas generales
+    total_estudiantes = len(porcs)
+    promedio_asistencia_grupal = sum(porcs) / total_estudiantes
+    promedio_atraso_grupal = sum(atrasos_prom) / total_estudiantes  
+    # Estados
+    criticos = estados.count("Crítico")
+    en_riesgo = estados.count("En riesgo")
+    regulares = estados.count("Regular")
+
+    reporte = "==================================================\n"
+    reporte += "       REPORTE DE ASISTENCIA Y PUNTUALIDAD\n"
+    reporte += "==================================================\n"
+    reporte += f"Configuración: Mín. Asistencia: {pmin}% | Máx. Atraso: {amax} min\n"
+    reporte += "--------------------------------------------------\n" 
+    # Información General
+    reporte += "RESUMEN DEL CURSO:\n"
+    reporte += f"- Estado General: {estado_curso.upper()}\n"
+    reporte += f"- Promedio Asistencia Grupal: {promedio_asistencia_grupal:.2f}%\n"
+    reporte += f"- Promedio Atraso Grupal: {promedio_atraso_grupal:.2f} min\n"
+    reporte += f"- Distribución: {regulares} Regulares, {en_riesgo} En Riesgo, {criticos} Críticos\n"
+    reporte += "--------------------------------------------------\n\n"  
+    # Detalle Individual
+    reporte += "DETALLE POR ESTUDIANTE:\n"
+    for i in range(total_estudiantes):
+        reporte += f"[Estudiante: {i+1:02d}] Asistencias: {porcs[i]:>6.2f}% | "
+        reporte += f"Atrasos Proemedios: {atrasos_prom[i]:>5.2f} min | "
+        reporte += f"Estado: {estados[i]}\n"
+    reporte += "=================================================="
     return reporte
+
+# =========================
+# 4. PROCESAMIENTO E IMPRESIÓN 
+# =========================
+porcentajes = []
+atrasos_prom_list = []
+estados = []
+
+
+print("\n" + "="*30)
+print("DETALLE POR DÍA")
+print("="*30)
+
+porc_dias_grafico = [] #Para el gráfico de líneas
+for d in range(n_dias): 
+    asistentes, porc_dia, prom_atr_dia = resumen_dia(asistencia, atrasos, d, Amax)
+    porc_dias_grafico.append(porc_dia) # Guardar para gráfico
+    print(f"\nDía {d+1}")
+    print("Asistentes:", asistentes)
+    print("Porcentaje asistencia:", round(porc_dia, 2), "%")
+    print("Atraso promedio del día:", round(prom_atr_dia, 2))
+
 
 # =========================
 # 4. PROCESAMIENTO
@@ -157,7 +227,7 @@ plt.show()
 # Gráfico de línea: asistencia diaria
 porc_dias = []
 for d in range(n_dias):
-    resultado = resumen_dia(asistencia, atrasos, d)
+    resultado = resumen_dia(asistencia, atrasos, d, Amax)
     if resultado:
         porc_dias.append(resultado[1])
 
