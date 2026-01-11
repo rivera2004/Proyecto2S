@@ -60,7 +60,7 @@ n_estudiantes = 8
 n_dias = 7
 
 # =========================
-# 3. FUNCIONES OBLIGATORIAS
+# 3. FUNCIONES 
 # =========================
 def resumen_estudiante(lista_asistencia, lista_atrasos):
     total_asistencias = 0
@@ -135,7 +135,7 @@ def clasificar_curso(prom_curso):
 # =========================
 # 4. PROCESAMIENTO E IMPRESIÓN 
 # =========================
-def imprimir_reporte_general(porcs, atrasos_prom, estados, estado_curso, pmin, amax):
+def reporte_general(porcs, atrasos_prom, estados, estado_curso, pmin, amax):
     total_estudiantes = len(porcs)
     promedio_asistencia_grupal = sum(porcs) / total_estudiantes
     promedio_atraso_grupal = sum(atrasos_prom) / total_estudiantes
@@ -147,26 +147,26 @@ def imprimir_reporte_general(porcs, atrasos_prom, estados, estado_curso, pmin, a
     print("\n==================================================")
     print("      REPORTE DE ASISTENCIA Y PUNTUALIDAD")
     print("==================================================")
-    print(f"Configuración: Asistencia Mín: {pmin}% | Atraso Máx: {amax} min")
+    print(f"Datos preestablecidos: Asistencia Mín: {pmin}% | Atraso Máx: {amax} min")
     print("--------------------------------------------------")
     print("RESUMEN DEL CURSO:")
     print(f"- Estado General: {estado_curso.upper()}")
     print(f"- Promedio Asistencia Grupal: {promedio_asistencia_grupal:.2f}%")
     print(f"- Promedio Atraso Grupal: {promedio_atraso_grupal:.2f} min")
-    print(f"- Distribución: {regulares} Regulares, {en_riesgo} En Riesgo, {criticos} Críticos")
+    print(f"- Distribución de estudiantes: {regulares} Regulares, {en_riesgo} En Riesgo, {criticos} Críticos")
     print("--------------------------------------------------")
     print("DETALLE POR ESTUDIANTE:")
     for i in range(total_estudiantes):
         print(f"[Estudiante {i+1:02d}] Asistencia: {porcs[i]:>6.2f}% | Atraso Prom: {atrasos_prom[i]:>5.2f} min | Estado: {estados[i]}")
     print("==================================================")
 
-def imprimir_detalle_por_dia(asistencia, atrasos, n_dias, amax):
+def reporte_por_dia(asistencia, atrasos, n_dias, amax):
     print("\n" + "="*30)
-    print("DETALLE POR DÍA (CLASIFICACIÓN)")
+    print("DETALLE POR DÍA")
     print("="*30)
     for d in range(n_dias):
         asistentes, porc_dia, prom_atr_dia = resumen_dia(asistencia, atrasos, d, amax)
-        print(f"Día {d+1}: {asistentes} presentes | {porc_dia:.2f}% asistencia | Atraso prom: {prom_atr_dia:.2f} min")
+        print(f"Día {d+1}: {asistentes} estudiantes presentes | {porc_dia:.2f}% asistencia | Atraso promedio: {prom_atr_dia:.2f} min")
 
 # =========================
 # 4. PROCESAMIENTO
@@ -189,9 +189,9 @@ estado_curso = clasificar_curso(prom_curso)
 # =========================
 # 5. REPORTE
 # =========================
-imprimir_reporte_general(porcentajes, atrasos_prom, estados, estado_curso, Pmin, Amax)
+reporte_general(porcentajes, atrasos_prom, estados, estado_curso, Pmin, Amax)
 
-imprimir_detalle_por_dia(asistencia, atrasos, n_dias, Amax)
+reporte_por_dia(asistencia, atrasos, n_dias, Amax)
 
 # =========================
 # 6. VISUALIZACIONES
@@ -220,4 +220,25 @@ plt.xlabel("Día")
 plt.ylabel("Asistencia diaria (%)")
 plt.title("Asistencia diaria del curso")
 plt.grid(True)
+plt.show()
+
+# Extraer los atrasos promedio de cada día
+atrasos_diarios = []
+for d in range(n_dias):
+    _, _, prom_atr_dia = resumen_dia(asistencia, atrasos, d, Amax)
+    atrasos_diarios.append(prom_atr_dia)
+
+plt.figure()
+plt.plot(range(1, 8), atrasos_diarios, marker='s', 
+         linewidth=2, label='Atraso Promedio Real')
+
+# Línea de referencia Amax
+plt.axhline(Amax, color='red', linestyle='--', label=f'Límite Atrasos ({Amax} min)')
+plt.fill_between(range(1, 8), atrasos_diarios, color='orange', alpha=0.1)
+plt.xlabel("Día de la Semana")
+plt.ylabel("Minutos de Atraso")
+plt.title("Patrones de Puntualidad Diaria vs. Límite Permitido")
+plt.xticks(range(1, 8))
+plt.grid(True)
+
 plt.show()
